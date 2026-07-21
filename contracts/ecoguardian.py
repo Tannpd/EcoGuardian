@@ -1,17 +1,11 @@
 # v0.2.16
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
-
-# =============================================================================
-#  ecoguardian.py — EcoGuardian Fund: Wildlife Conservation Escrow Protocol
-#  GenLayer Intelligent Contract (v0.2.16)
-# =============================================================================
-
 from genlayer import *
 import json
 
 class Contract(gl.Contract):
     """
-    EcoGuardian Fund — Wildlife Conservation Escrow Protocol
+    EcoGuardian Fund - Wildlife Conservation Escrow Protocol
     ========================================================
     A Regenerative Finance (ReFi) smart contract that holds conservation grants in
     escrow. Funds are released based on verified ecological impact rather than time.
@@ -21,34 +15,34 @@ class Contract(gl.Contract):
     """
 
     # Monotonic grant counter
-    grants_count:               u64
+    grants_count:               bigint
 
     # Storage Mappings (Pre-initialized by VM)
-    grant_creator:              TreeMap[u64, Address]
-    grant_ngo:                  TreeMap[u64, Address]
-    grant_amount:               TreeMap[u64, u256]
-    grant_conservation_goal:    TreeMap[u64, str]
-    grant_report_url:           TreeMap[u64, str]
-    grant_status:               TreeMap[u64, str]       # "ACTIVE", "RELEASED", "FAILED"
-    grant_is_recovering:        TreeMap[u64, bool]
-    grant_confidence_score:     TreeMap[u64, u256]      # 0 to 100
-    grant_ecological_analysis:  TreeMap[u64, str]       # Scientific auditor breakdown
+    grant_creator:              TreeMap[str, Address]
+    grant_ngo:                  TreeMap[str, Address]
+    grant_amount:               TreeMap[str, bigint]
+    grant_conservation_goal:    TreeMap[str, str]
+    grant_report_url:           TreeMap[str, str]
+    grant_status:               TreeMap[str, str]       # "ACTIVE", "RELEASED", "FAILED"
+    grant_is_recovering:        TreeMap[str, bool]
+    grant_confidence_score:     TreeMap[str, bigint]    # 0 to 100
+    grant_ecological_analysis:  TreeMap[str, str]       # Scientific auditor breakdown
 
-    # ═══════════════════════════════════════════════════════════════════
+    # ===================================================================
     # CONSTRUCTOR
-    # ═══════════════════════════════════════════════════════════════════
+    # ===================================================================
     def __init__(self) -> None:
-        self.grants_count = 0
+        self.grants_count = bigint(0)
 
-    # ═══════════════════════════════════════════════════════════════════
+    # ===================================================================
     # PUBLIC WRITE: CREATE GRANT
-    # ═══════════════════════════════════════════════════════════════════
-    @gl.public.write
+    # ===================================================================
+    @gl.public.write.payable
     def create_grant(self, ngo: Address, conservation_goal: str) -> int:
         """
         Philanthropist or DAO locks native GEN tokens, designating the NGO and milestone goals.
         """
-        amount = int(gl.message.value)
+        amount = bigint(gl.message.value)
         if amount <= 0:
             raise UserError("You must lock a positive GEN amount to fund a conservation grant.")
 
@@ -56,23 +50,24 @@ class Contract(gl.Contract):
             raise UserError("Conservation goal description cannot be empty.")
 
         gid = self.grants_count
+        gid_str = str(gid)
 
-        self.grant_creator[gid] = gl.message.sender_address
-        self.grant_ngo[gid] = ngo
-        self.grant_amount[gid] = amount
-        self.grant_conservation_goal[gid] = conservation_goal.strip()
-        self.grant_report_url[gid] = ""
-        self.grant_status[gid] = "ACTIVE"
-        self.grant_is_recovering[gid] = False
-        self.grant_confidence_score[gid] = 0
-        self.grant_ecological_analysis[gid] = "Grant funded. NGO can request milestone payouts by submitting field reports."
+        self.grant_creator[gid_str] = gl.message.sender_address
+        self.grant_ngo[gid_str] = ngo
+        self.grant_amount[gid_str] = amount
+        self.grant_conservation_goal[gid_str] = conservation_goal.strip()
+        self.grant_report_url[gid_str] = ""
+        self.grant_status[gid_str] = "ACTIVE"
+        self.grant_is_recovering[gid_str] = False
+        self.grant_confidence_score[gid_str] = bigint(0)
+        self.grant_ecological_analysis[gid_str] = "Grant funded. NGO can request milestone payouts by submitting field reports."
 
-        self.grants_count = int(gid) + 1
+        self.grants_count = gid + 1
         return int(gid)
 
-    # ═══════════════════════════════════════════════════════════════════
+    # ===================================================================
     # PUBLIC WRITE: AUDIT MILESTONE
-    # ═══════════════════════════════════════════════════════════════════
+    # ===================================================================
     @gl.public.write
     def audit_milestone(self, grant_id: int, field_report_url: str) -> None:
         """
@@ -82,13 +77,14 @@ class Contract(gl.Contract):
         if grant_id < 0 or grant_id >= int(self.grants_count):
             raise UserError("Grant does not exist.")
 
-        status = self.grant_status.get(grant_id, "ACTIVE")
+        gid_str = str(grant_id)
+        status = self.grant_status.get(gid_str, "ACTIVE")
         if status != "ACTIVE" and status != "FAILED":
             raise UserError("Grant is not in active or failed state.")
 
-        ngo = self.grant_ngo.get(grant_id, Address("0x0000000000000000000000000000000000000000"))
-        amount = int(self.grant_amount.get(grant_id, 0))
-        goal = self.grant_conservation_goal.get(grant_id, "")
+        ngo = self.grant_ngo.get(gid_str, Address("0x0000000000000000000000000000000000000000"))
+        amount = self.grant_amount.get(gid_str, bigint(0))
+        goal = self.grant_conservation_goal.get(gid_str, "")
 
         if amount <= 0:
             raise UserError("No locked funds found in this grant vault.")
@@ -100,11 +96,11 @@ class Contract(gl.Contract):
         if not (url_lower.startswith("http://") or url_lower.startswith("https://")):
             raise UserError("Invalid URL format. Must start with http:// or https://")
 
-        self.grant_report_url[grant_id] = field_report_url.strip()
-        self.grant_status[grant_id] = "ACTIVE"
-        self.grant_ecological_analysis[grant_id] = "AI Ecological Scientists are auditing the field report metrics..."
+        self.grant_report_url[gid_str] = field_report_url.strip()
+        self.grant_status[gid_str] = "ACTIVE"
+        self.grant_ecological_analysis[gid_str] = "AI Ecological Scientists are auditing the field report metrics..."
 
-        # ── Non-Deterministic Execution block ───────────────────────────
+        # --- Non-Deterministic Execution block ----------------------------
         def leader_fn() -> str:
             # 1. Scrape Field Report page
             try:
@@ -144,12 +140,17 @@ Please analyze:
 1. POPULATION METRICS: Does the report show a positive recovery trend, population increase, or habitat expansion for the target species?
 2. THREAT MITIGATION: Is there data verifying a significant decrease in poaching, logging, or illegal hunting?
 3. VERDICT: Determine "is_recovering" (true or false). Set it to true ONLY if there is clear, quantitative, or scientific confirmation that the conservation goal is actively being achieved or surpassed.
-4. CONFIDENCE: Rate your confidence in the report's quality and metrics from 0 to 100.
+4. CONFIDENCE: Rate your confidence in the report's quality and metrics.
+   - You MUST choose exactly one of these three values for confidence_score:
+     * 90 (if the report is a highly detailed, peer-reviewed study with clear charts).
+     * 50 (if the report is a general progress update with basic statistics).
+     * 10 (if the report lacks metrics or is highly qualitative).
+   - Do NOT choose any other confidence score.
 
 Your output MUST be a single, valid JSON object with EXACTLY the following keys:
 {{
   "is_recovering": true | false,
-  "confidence_score": <int between 0 and 100>,
+  "confidence_score": 90 | 50 | 10,
   "ecological_analysis": "<2-3 sentences of scientific summary detailing the biological proof or lack thereof>"
 }}
 Do NOT wrap the JSON in markdown code blocks. Do NOT add any extra text or conversation. Only return the raw JSON."""
@@ -201,7 +202,6 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any extra text or conve
             """
             Semantic Validator: Core Boolean Consensus.
             Nodes must agree on the core boolean 'is_recovering' decision.
-            Varying scores or analyses are accepted to ensure high throughput.
             """
             try:
                 leader_data = json.loads(leader_result)
@@ -216,10 +216,10 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any extra text or conve
             try:
                 validator_data = json.loads(validator_raw)
             except Exception:
-                return True  # Abstain on local error
+                return False  # Reject consensus on local parse error
 
             if "error" in validator_data:
-                return True
+                return False  # Reject consensus if validator node failed but leader succeeded
 
             leader_recov = bool(leader_data.get("is_recovering", False))
             validator_recov = bool(validator_data.get("is_recovering", False))
@@ -232,37 +232,37 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any extra text or conve
         try:
             res = json.loads(consensus_json)
         except Exception:
-            self.grant_status[grant_id] = "FAILED"
-            self.grant_ecological_analysis[grant_id] = "Consensus outcome was unparseable."
+            self.grant_status[gid_str] = "FAILED"
+            self.grant_ecological_analysis[gid_str] = "Consensus outcome was unparseable."
             return
 
         if "error" in res:
-            self.grant_status[grant_id] = "FAILED"
-            self.grant_ecological_analysis[grant_id] = f"Audit failed: {res.get('error')}. Info: {res.get('ecological_analysis')}"
+            self.grant_status[gid_str] = "FAILED"
+            self.grant_ecological_analysis[gid_str] = f"Audit failed: {res.get('error')}. Info: {res.get('ecological_analysis')}"
             return
 
         is_recov = bool(res.get("is_recovering", False))
         score = int(res.get("confidence_score", 0))
         analysis_str = str(res.get("ecological_analysis", "AI biological audit completed."))
 
-        self.grant_is_recovering[grant_id] = is_recov
-        self.grant_confidence_score[grant_id] = score
-        self.grant_ecological_analysis[grant_id] = analysis_str
+        self.grant_is_recovering[gid_str] = is_recov
+        self.grant_confidence_score[gid_str] = bigint(score)
+        self.grant_ecological_analysis[gid_str] = analysis_str
 
         if is_recov:
             # milestone verified! release grant to NGO
-            self.grant_amount[grant_id] = 0
-            self.grant_status[grant_id] = "RELEASED"
+            self.grant_amount[gid_str] = bigint(0)
+            self.grant_status[gid_str] = "RELEASED"
 
             other = gl.get_contract_at(ngo)
-            other.emit_transfer(value=u256(amount))
+            other.emit_transfer(value=bigint(amount))
         else:
             # Fails to trigger release, remains locked and ACTIVE for future audits
-            self.grant_status[grant_id] = "ACTIVE"
+            self.grant_status[gid_str] = "ACTIVE"
 
-    # ═══════════════════════════════════════════════════════════════════
+    # ===================================================================
     # READ-ONLY VIEW METHODS
-    # ═══════════════════════════════════════════════════════════════════
+    # ===================================================================
     @gl.public.view
     def get_grant(self, grant_id: int) -> str:
         """
@@ -271,15 +271,16 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any extra text or conve
         if grant_id < 0 or grant_id >= int(self.grants_count):
             return "{}"
 
-        creator = self.grant_creator.get(grant_id, Address("0x0000000000000000000000000000000000000000"))
-        ngo = self.grant_ngo.get(grant_id, Address("0x0000000000000000000000000000000000000000"))
-        amount = int(self.grant_amount.get(grant_id, 0))
-        goal = self.grant_conservation_goal.get(grant_id, "")
-        url = self.grant_report_url.get(grant_id, "")
-        status = self.grant_status.get(grant_id, "ACTIVE")
-        is_recov = bool(self.grant_is_recovering.get(grant_id, False))
-        score = int(self.grant_confidence_score.get(grant_id, 0))
-        analysis_str = self.grant_ecological_analysis.get(grant_id, "")
+        gid_str = str(grant_id)
+        creator = self.grant_creator.get(gid_str, Address("0x0000000000000000000000000000000000000000"))
+        ngo = self.grant_ngo.get(gid_str, Address("0x0000000000000000000000000000000000000000"))
+        amount = int(self.grant_amount.get(gid_str, bigint(0)))
+        goal = self.grant_conservation_goal.get(gid_str, "")
+        url = self.grant_report_url.get(gid_str, "")
+        status = self.grant_status.get(gid_str, "ACTIVE")
+        is_recov = bool(self.grant_is_recovering.get(gid_str, False))
+        score = int(self.grant_confidence_score.get(gid_str, bigint(0)))
+        analysis_str = self.grant_ecological_analysis.get(gid_str, "")
 
         return json.dumps({
             "id": grant_id,
