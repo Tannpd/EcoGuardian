@@ -1,15 +1,18 @@
-# EcoGuardian Fund - Wildlife Conservation Escrow Primitive
+# EcoGuardian Fund — Evidence-Based Wildlife Conservation Protocol
 
-**EcoGuardian Fund** is an Intelligent Contract built on GenLayer that implements a Regenerative Finance (ReFi) wildlife conservation grant escrow primitive. It allows philanthropists or DAOs to lock native tokens, releasing funding to NGOs based on verified ecological impact verified through consensus-driven AI analysis of scientific field reports.
+**EcoGuardian Fund** is a Regenerative Finance (ReFi) smart contract that escrows wildlife conservation grants, releasing funds based on verified ecological impact rather than time milestones.
 
----
+## ⚡ The Pitch: Why EcoGuardian Fund DIES without GenLayer
 
-## The Pitch: Why EcoGuardian Requires GenLayer
+On traditional blockchains (Ethereum, Solana, etc.), smart contracts are fully deterministic and isolated from the outside world. This makes EcoGuardian Fund **impossible** to build because:
+1. **No External Scraped Data**: Traditional contracts cannot access web pages or scrape dynamic environmental report PDFs directly.
+2. **Oracle Centralization**: Relying on standard web-scraping oracles introduces a single point of failure and centralized manipulation.
+3. **No Native AI Processing**: Evaluating dynamic animal population metrics, poaching trends, and scientific reports requires qualitative, natural language analysis. Traditional chains cannot run large language models on-chain.
 
-On traditional blockchains, smart contracts cannot read dynamic web documents or evaluate qualitative scientific parameters. EcoGuardian uses GenLayer's decentralized execution network to:
-1. **Access Scientific Field Reports**: Retrieve dynamic field reports via `gl.nondet.web.render`.
-2. **Perform Qualitative Analysis**: Feed the scientific report text and targets into LLM consensus rounds (`gl.nondet.exec_prompt`) to verify population recovery and anti-poaching milestones.
-3. **Consensus on Meaning**: Run a custom validator that enforces agreement on the core boolean ecological recovery outcome (`is_recovering`), resisting format-only validations.
+**GenLayer solves all of this.** By using non-deterministic calls (`gl.nondet.web.render` and `gl.nondet.exec_prompt`) executed by a decentralized network of nodes, GenLayer allows the contract to:
+- Directly read live environmental reports from submitted report URL parameters.
+- Feed the comparative data into an AI consensus round to evaluate metrics against conservation goals.
+- Run a custom validator that verifies the core boolean ecological recovery outcome (`is_recovering`), ensuring robust consensus.
 
 ---
 
