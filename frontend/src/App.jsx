@@ -167,12 +167,12 @@ export default function App() {
         </div>
         <div>
           {address ? (
-            <button className="cyan-outline-btn" onClick={() => fetchGrantsState()} style={{ padding: '0.6rem 1rem', fontSize: '0.85rem' }}>
-              Refresh Scope
+            <button className="cyan-outline-btn" onClick={() => fetchGrantsState()} disabled={loading} style={{ padding: '0.6rem 1rem', fontSize: '0.85rem' }}>
+              {loading ? 'Refreshing...' : 'Refresh Scope'}
             </button>
           ) : (
             <button className="cyan-btn" onClick={connectWallet} disabled={loading} style={{ padding: '0.6rem 1rem' }}>
-              Connect Terminal
+              {loading ? 'Connecting...' : 'Connect Terminal'}
             </button>
           )}
         </div>
@@ -234,7 +234,11 @@ export default function App() {
             </div>
 
             <button type="submit" className="cyan-btn" disabled={loading || !address}>
-              <Plus size={18} /> Deploy Conservation Grant
+              {loading ? 'Deploying Grant...' : (
+                <>
+                  <Plus size={18} /> Deploy Conservation Grant
+                </>
+              )}
             </button>
           </form>
 
@@ -400,7 +404,7 @@ export default function App() {
                         onChange={(e) => setReportUrl(e.target.value)}
                       />
                       <button type="submit" className="cyan-btn" disabled={loading || !address} style={{ padding: '0 1.25rem' }}>
-                        Audit Milestone
+                        {loading ? 'Auditing...' : 'Audit Milestone'}
                       </button>
                     </div>
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>

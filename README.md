@@ -48,7 +48,7 @@ EcoGuardian implements a robust, meaning-based consensus mechanism:
 
 ## Deployment Evidence
 
-- **Contract Address**: `0xa408663FDD20C69783Fc5611a29e3C01ebB779D5`
+- **Contract Address**: `0x24438946A2874987eBec87D9F45CC43c447b54DF`
 - **Network**: `studionet`
 
 ### Worked Example Call
