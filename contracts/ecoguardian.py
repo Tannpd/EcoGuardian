@@ -3,6 +3,24 @@
 from genlayer import *
 import json
 
+def to_address(val) -> Address:
+    """
+    Ensures input addresses are represented as pure Address structures,
+    protecting against string/int input deserialization issues in GenLayer Studio UI.
+    """
+    if isinstance(val, Address):
+        return val
+    if isinstance(val, int):
+        return Address(f"0x{val:040x}")
+    if isinstance(val, str):
+        if val.startswith("0x"):
+            return Address(val)
+        try:
+            return Address(f"0x{int(val):040x}")
+        except Exception:
+            return Address(val)
+    return Address(str(val))
+
 class Contract(gl.Contract):
     """
     EcoGuardian Fund - Wildlife Conservation Escrow Protocol
@@ -53,7 +71,7 @@ class Contract(gl.Contract):
         gid_str = str(gid)
 
         self.grant_creator[gid_str] = gl.message.sender_address
-        self.grant_ngo[gid_str] = ngo
+        self.grant_ngo[gid_str] = to_address(ngo)
         self.grant_amount[gid_str] = amount
         self.grant_conservation_goal[gid_str] = conservation_goal.strip()
         self.grant_report_url[gid_str] = ""
