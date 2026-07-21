@@ -216,13 +216,23 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any extra text or conve
                     "ecological_analysis": f"AI response was not valid JSON: {cleaned}"
                 })
 
-        def validator_fn(leader_result: str) -> bool:
+        def validator_fn(leader_result) -> bool:
             """
             Semantic Validator: Core Boolean Consensus.
             Nodes must agree on the core boolean 'is_recovering' decision.
             """
             try:
-                leader_data = json.loads(leader_result)
+                if isinstance(leader_result, bytes):
+                    result_str = leader_result.decode('utf-8', errors='ignore')
+                else:
+                    result_str = str(leader_result)
+
+                start_idx = result_str.find('{')
+                end_idx = result_str.rfind('}')
+                if start_idx == -1 or end_idx == -1 or start_idx > end_idx:
+                    return False
+                cleaned_result = result_str[start_idx:end_idx+1]
+                leader_data = json.loads(cleaned_result)
             except Exception:
                 return False
 
@@ -232,7 +242,16 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any extra text or conve
 
             validator_raw = leader_fn()
             try:
-                validator_data = json.loads(validator_raw)
+                if isinstance(validator_raw, bytes):
+                    val_str = validator_raw.decode('utf-8', errors='ignore')
+                else:
+                    val_str = str(validator_raw)
+                val_start = val_str.find('{')
+                val_end = val_str.rfind('}')
+                if val_start == -1 or val_end == -1 or val_start > val_end:
+                    return False
+                cleaned_val = val_str[val_start:val_end+1]
+                validator_data = json.loads(cleaned_val)
             except Exception:
                 return False  # Reject consensus on local parse error
 
@@ -248,7 +267,16 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any extra text or conve
         consensus_json = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
 
         try:
-            res = json.loads(consensus_json)
+            if isinstance(consensus_json, bytes):
+                cons_str = consensus_json.decode('utf-8', errors='ignore')
+            else:
+                cons_str = str(consensus_json)
+            cons_start = cons_str.find('{')
+            cons_end = cons_str.rfind('}')
+            if cons_start == -1 or cons_end == -1 or cons_start > cons_end:
+                raise ValueError("No JSON object found")
+            cleaned_cons = cons_str[cons_start:cons_end+1]
+            res = json.loads(cleaned_cons)
         except Exception:
             self.grant_status[gid_str] = "FAILED"
             self.grant_ecological_analysis[gid_str] = "Consensus outcome was unparseable."
