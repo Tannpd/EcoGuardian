@@ -245,6 +245,22 @@ export default function App() {
           {/* TEST PRESETS */}
           <div className="presets-list">
             <span className="observatory-label">Simulated Audit Targets</span>
+
+            <button 
+              className="preset-card"
+              style={{ borderLeft: '3px solid var(--color-cyan)', background: 'rgba(2, 240, 240, 0.05)' }}
+              onClick={() => setPreset(
+                'Increase target tiger population by 15% and verify zero poaching activity.',
+                'https://eco-guardian-navy.vercel.app/mock_report.txt',
+                '0x6E7aEC161189e81c8a127ebE0b80886e90D2fD8d'
+              )}
+            >
+              <div className="preset-info">
+                <span className="preset-title" style={{ color: 'var(--color-cyan)' }}>Bengal Tigers (Vercel Live)</span>
+                <span className="preset-goal">Audit milestone using live Vercel mock report (will approve consensus).</span>
+              </div>
+              <Shield size={16} color="var(--color-cyan)" />
+            </button>
             
             <button 
               className="preset-card"
